@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Drum Pattern Generator — Free Online Drum Machine | Sonarc</title>
+<meta name="description" content="Generate real drum patterns for any genre. Trap, House, Jazz, Rock, Hip-Hop, Darkwave and more. Customize steps, adjust BPM, play instantly in browser. Free.">
+<meta property="og:title" content="AI Drum Pattern Generator — Free Online Drum Machine | Sonarc">
+<meta property="og:description" content="Generate real drum patterns for any genre. Trap, House, Jazz, Rock, Hip-Hop, Darkwave and more. Customize steps, adjust BPM, play instantly in browser. Free.">
+<meta property="og:type" content="website">
+<meta name="robots" content="index, follow">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@300;400;500;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+<style>
+:root {
+  --bg: #080808;
+  --surface: #111111;
+  --surface2: #1a1a1a;
+  --border: #222222;
+  --accent: #cc2936;
+  --accent2: #ff4d5a;
+  --text: #f5f5f5;
+  --muted: #666666;
+  --muted2: #444444;
+  --radius: 12px;
+  --mono: 'JetBrains Mono', monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.4;}
+#waveCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.06;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:20px 48px;background:rgba(8,8,8,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;}
+.logo span{color:var(--accent);}
+.nav-links{display:flex;gap:32px;list-style:none;}
+.nav-links a{font-family:var(--mono);font-size:11px;color:var(--muted);text-decoration:none;letter-spacing:0.1em;text-transform:uppercase;transition:color 0.2s;}
+.nav-links a:hover{color:var(--text);}
+.nav-badge{font-family:var(--mono);font-size:11px;background:var(--accent);color:#fff;padding:6px 16px;border-radius:4px;letter-spacing:0.1em;text-transform:uppercase;}
+
+/* HERO */
+.hero{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 20px 80px;}
+.hero-label{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:0.3em;text-transform:uppercase;margin-bottom:24px;display:flex;align-items:center;gap:10px;}
+.hero-label::before,.hero-label::after{content:'';width:40px;height:1px;background:var(--accent);}
+.hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(80px,14vw,180px);letter-spacing:8px;line-height:0.9;margin-bottom:8px;}
+.hero h1 .outline{-webkit-text-stroke:1px rgba(245,245,245,0.2);color:transparent;}
+.hero-sub{font-family:var(--mono);font-size:13px;color:var(--muted);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:48px;}
+.hero-tools{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:48px;}
+.tool-pill{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--border);padding:6px 14px;border-radius:100px;letter-spacing:0.05em;cursor:pointer;transition:all 0.2s;}
+.tool-pill:hover{border-color:var(--accent);color:var(--accent);}
+.hero-cta{display:flex;gap:14px;align-items:center;}
+.btn-primary{background:var(--accent);color:#fff;border:none;padding:14px 32px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;border-radius:6px;cursor:pointer;transition:all 0.2s;}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(204,41,54,0.3);}
+.btn-ghost{background:none;color:var(--muted);border:1px solid var(--border);padding:14px 32px;font-family:var(--mono);font-size:12px;letter-spacing:0.15em;text-transform:uppercase;border-radius:6px;cursor:pointer;transition:all 0.2s;}
+.btn-ghost:hover{border-color:var(--muted);color:var(--text);}
+.scroll-ind{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;color:var(--muted2);letter-spacing:0.2em;text-transform:uppercase;animation:bounce 2s infinite;}
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(6px);}}
+
+/* STATS */
+.stats-bar{position:relative;z-index:1;display:flex;justify-content:center;gap:60px;padding:40px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--surface);flex-wrap:wrap;}
+.stat{text-align:center;}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:2px;color:var(--accent);}
+.stat-label{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.2em;text-transform:uppercase;margin-top:4px;}
+
+/* TOOLS NAV */
+.tools-nav{position:relative;z-index:1;display:flex;justify-content:center;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto;}
+.tool-tab{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;padding:16px 24px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;}
+.tool-tab:hover{color:var(--text);}
+.tool-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* PANELS */
+.tool-panel{display:none;position:relative;z-index:1;min-height:70vh;padding:60px 40px;max-width:1000px;margin:0 auto;animation:fadeIn 0.3s ease;}
+.tool-panel.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.panel-tag{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:0.3em;text-transform:uppercase;margin-bottom:12px;}
+.panel-title{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:3px;line-height:1;margin-bottom:10px;}
+.panel-desc{color:var(--muted);font-size:15px;line-height:1.6;max-width:560px;margin-bottom:32px;}
+
+/* CONTROLS */
+.controls-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-bottom:20px;}
+.control-group{display:flex;flex-direction:column;gap:8px;}
+.control-label{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.15em;text-transform:uppercase;}
+select,input[type="text"]{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;transition:border-color 0.2s;width:100%;}
+select:focus,input:focus{border-color:var(--accent);}
+select option{background:var(--surface2);}
+
+/* DICE INPUT */
+.input-with-dice{position:relative;}
+.input-with-dice textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 50px 12px 14px;color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;outline:none;transition:border-color 0.2s;resize:vertical;min-height:80px;line-height:1.6;}
+.input-with-dice textarea:focus{border-color:var(--accent);}
+.dice-btn{position:absolute;top:10px;right:10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;transition:all 0.2s;z-index:2;}
+.dice-btn:hover{border-color:var(--accent);transform:rotate(20deg) scale(1.1);}
+.dice-pool{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:0;}
+.dice-chip{font-family:var(--mono);font-size:10px;color:var(--muted);border:1px solid var(--border);padding:5px 12px;border-radius:100px;cursor:pointer;transition:all 0.15s;letter-spacing:0.04em;line-height:1.4;}
+.dice-chip:hover{border-color:var(--accent);color:var(--accent);}
+.more-ideas-btn{font-family:var(--mono);font-size:10px;color:var(--accent);background:none;border:1px dashed rgba(204,41,54,0.4);padding:5px 12px;border-radius:100px;cursor:pointer;transition:all 0.15s;letter-spacing:0.04em;}
+.more-ideas-btn:hover{background:rgba(204,41,54,0.08);}
+
+/* INSTRUMENT TABS */
+.inst-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+.inst-tab{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--border);padding:7px 16px;border-radius:6px;cursor:pointer;transition:all 0.15s;background:none;letter-spacing:0.05em;}
+.inst-tab.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.inst-tab:hover:not(.active){border-color:var(--muted);color:var(--text);}
+
+/* GENERATE BTN */
+.generate-btn{background:var(--accent);color:#fff;border:none;padding:14px 36px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;border-radius:6px;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:10px;}
+.generate-btn:hover{background:var(--accent2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(204,41,54,0.3);}
+.generate-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:20px;}
+
+/* OUTPUT */
+.output-box{margin-top:28px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;display:none;animation:fadeIn 0.3s ease;}
+.output-box.show{display:block;}
+.output-label{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:0.3em;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
+.copy-btn{background:none;border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;transition:all 0.15s;letter-spacing:0.1em;}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent);}
+.output-content{font-size:15px;line-height:2;color:var(--text);white-space:pre-wrap;font-family:'Outfit',sans-serif;}
+
+/* CHORD CHIPS */
+.chord-display{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0;}
+.chord-chip{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 22px;font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;cursor:pointer;transition:all 0.15s;text-align:center;}
+.chord-chip:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-2px);}
+.chord-chip .chord-sub{display:block;font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.1em;margin-top:2px;text-transform:uppercase;}
+.chord-info{font-family:var(--mono);font-size:12px;color:var(--muted);line-height:1.9;margin-top:12px;}
+
+/* PIANO */
+.piano-wrap{margin-top:20px;overflow-x:auto;padding-bottom:8px;}
+.piano{display:flex;position:relative;height:130px;width:fit-content;min-width:300px;}
+.white-key{width:40px;height:130px;background:#efefef;border:1px solid #bbb;border-radius:0 0 5px 5px;cursor:pointer;transition:background 0.08s;position:relative;z-index:1;}
+.white-key:hover,.white-key.active{background:var(--accent);}
+.black-key{width:24px;height:80px;background:#1a1a1a;border:1px solid #444;border-radius:0 0 4px 4px;cursor:pointer;position:absolute;z-index:2;top:0;transition:background 0.08s;}
+.black-key:hover,.black-key.active{background:var(--accent);}
+
+/* DRUM */
+.drum-grid{margin-top:20px;}
+.drum-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.drum-label{font-family:var(--mono);font-size:10px;color:var(--muted);width:52px;letter-spacing:0.05em;text-transform:uppercase;flex-shrink:0;}
+.drum-steps{display:flex;gap:4px;flex-wrap:wrap;}
+.drum-step{width:30px;height:30px;border-radius:5px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;transition:all 0.1s;}
+.drum-step.on{background:var(--accent);border-color:var(--accent);box-shadow:0 0 8px rgba(204,41,54,0.4);}
+.drum-step.playing{background:#fff;border-color:#fff;}
+.drum-controls{display:flex;align-items:center;gap:16px;margin-top:20px;flex-wrap:wrap;}
+.bpm-display{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--accent);letter-spacing:2px;}
+.play-btn{width:50px;height:50px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.play-btn:hover{background:var(--accent2);transform:scale(1.1);}
+
+/* LOADING */
+.loading-dots{display:none;gap:6px;align-items:center;}
+.loading-dots.show{display:flex;}
+.loading-dots span{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:dotPulse 1.2s infinite;}
+.loading-dots span:nth-child(2){animation-delay:0.2s;}
+.loading-dots span:nth-child(3){animation-delay:0.4s;}
+@keyframes dotPulse{0%,100%{opacity:0.2;transform:scale(0.8);}50%{opacity:1;transform:scale(1.2);}}
+
+/* ADS */
+.ad-top{position:relative;z-index:1;text-align:center;padding:10px;background:var(--surface);border-bottom:1px solid var(--border);}
+.ad-box{display:inline-flex;align-items:center;justify-content:center;background:var(--surface2);border:1px dashed var(--border);border-radius:6px;color:var(--muted2);font-family:var(--mono);font-size:10px;letter-spacing:0.1em;}
+.ad-leaderboard{width:min(728px,100%);height:90px;}
+.ad-rectangle{width:300px;height:250px;}
+.ad-mid{position:relative;z-index:1;display:flex;justify-content:center;padding:24px;}
+
+/* FOOTER */
+footer{position:relative;z-index:1;text-align:center;padding:48px 20px;border-top:1px solid var(--border);}
+.footer-logo{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:4px;margin-bottom:16px;}
+.footer-logo span{color:var(--accent);}
+.footer-links{display:flex;justify-content:center;gap:24px;margin:16px 0;flex-wrap:wrap;}
+.footer-links a{font-family:var(--mono);font-size:11px;color:var(--muted);text-decoration:none;letter-spacing:0.1em;transition:color 0.2s;}
+.footer-links a:hover{color:var(--accent);}
+.footer-copy{font-family:var(--mono);font-size:11px;color:var(--muted2);margin-top:16px;}
+
+@media(max-width:768px){
+  nav{padding:16px 20px;}
+  .nav-links{display:none;}
+  .hero h1{font-size:clamp(60px,18vw,100px);}
+  .tool-panel{padding:40px 16px;}
+  .panel-title{font-size:36px;}
+  .stats-bar{gap:30px;}
+  .drum-step{width:22px;height:22px;}
+}
+
+nav a{text-decoration:none;}
+.tool-panel.active{display:block!important;}
+</style></head>
+<body>
+<canvas id="waveCanvas"></canvas>
+<nav><div class="logo">Son<span>arc</span></div><ul class="nav-links"><li><a href="/">Home</a></li><li><a href="/chord-generator">Chord Generator</a></li><li><a href="/drum-machine" style="color:var(--text)">Drum Machine</a></li><li><a href="/lyrics-generator">Lyrics AI</a></li><li><a href="/hook-generator">Hook Generator</a></li><li><a href="/genre-blender">Genre Blender</a></li><li><a href="/song-titles">Song Titles</a></li><li><a href="/artist-name-ideas">Artist Names</a></li><li><a href="/artist-bio-generator">Artist Bio</a></li></ul></nav>
+<section class="hero" style="min-height:55vh;padding-top:140px;padding-bottom:40px;">
+  <div class="hero-label">Sonarc — AI Music Tools</div>
+  <h1 style="font-size:clamp(52px,8vw,110px);letter-spacing:5px">DRUM <span class="outline">MACHINE</span></h1>
+  <p class="hero-sub" style="margin-bottom:14px">Real patterns. Real sounds. Any genre.</p>
+  <p style="font-family:var(--mono);font-size:12px;color:var(--muted2);max-width:520px;text-align:center;line-height:1.9;letter-spacing:0.03em">Drum patterns for Trap, House, Rock, Jazz, Hip-Hop, Darkwave and more. Real sounds powered by Tone.js — click any step to customize, adjust BPM and play instantly.</p>
+  <div class="hero-cta" style="margin-top:28px">
+    <button class="btn-primary" onclick="document.getElementById('tool-section').scrollIntoView({behavior:'smooth'})">Open Tool ↓</button>
+  </div>
+</section>
+<section id="tool-section" style="position:relative;z-index:1;">
+  <!-- DRUM MACHINE -->
+  <div class="tool-panel active" id="panel-drums">
+    <div class="panel-tag">// Tool 03</div>
+    <div class="panel-title">Drum Machine</div>
+    <p class="panel-desc">Real drum patterns by genre. Hit play, click steps to customize, adjust BPM.</p>
+    <div class="controls-grid" style="margin-bottom:20px;">
+      <div class="control-group">
+        <label class="control-label">Genre</label>
+        <select id="drum-genre" onchange="generateDrumPattern()">
+          <option>Darkwave</option><option>Trap</option><option>House</option>
+          <option>Rock</option><option>Jazz</option><option>Hip-Hop</option>
+          <option>Drum & Bass</option><option>Techno</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label class="control-label">BPM</label>
+        <input type="text" id="drum-bpm" value="120" oninput="updateBPMDisplay()">
+      </div>
+    </div>
+    <div class="drum-grid" id="drum-grid"></div>
+    <div class="drum-controls">
+      <button class="play-btn" id="play-btn" onclick="togglePlay()">▶</button>
+      <div>
+        <div class="bpm-display" id="bpm-display">120</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.1em;">BPM</div>
+      </div>
+      <button class="generate-btn" onclick="generateDrumPattern()">🥁 New Pattern</button>
+    </div>
+  </div>
+
+  <!-- GENRE BLENDER -->
+</section>
+<div class="ad-mid"><div class="ad-box ad-rectangle">GOOGLE ADSENSE — 300x250</div></div>
+<footer id="about">
+  <div class="footer-logo">Son<span>arc</span></div>
+  <p style="font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:0.05em">AI music tools for every musician.</p>
+  <div class="footer-links">
+    <a href="/">Home</a>
+    <a href="/chord-generator">Chord Generator</a>
+    <a href="/lyrics-generator">Lyrics AI</a>
+    <a href="/drum-machine">Drum Machine</a>
+    <a href="/hook-generator">Hook Generator</a>
+    <a href="/artist-bio-generator">Artist Bio</a>
+    <a href="#">Privacy</a>
+    <a href="#">Contact</a>
+  </div>
+  <p class="footer-copy">2026 Sonarc. All rights reserved.</p>
+</footer>
+<script>
+// ── WAVE ANIMATION ──────────────────────────────
+const canvas = document.getElementById('waveCanvas');
+const wCtx = canvas.getContext('2d');
+let wOff = 0;
+function resizeCanvas(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+resizeCanvas(); window.addEventListener('resize', resizeCanvas);
+function drawWave(){
+  wCtx.clearRect(0,0,canvas.width,canvas.height);
+  [{amp:40,freq:0.008,spd:0.02,y:0.3},{amp:25,freq:0.012,spd:0.03,y:0.5},{amp:55,freq:0.005,spd:0.015,y:0.7}]
+  .forEach((w,i)=>{
+    wCtx.beginPath(); wCtx.strokeStyle=`rgba(204,41,54,${0.5-i*0.15})`; wCtx.lineWidth=1;
+    for(let x=0;x<=canvas.width;x++){
+      const y=canvas.height*w.y+Math.sin(x*w.freq+wOff*w.spd*50)*w.amp;
+      x===0?wCtx.moveTo(x,y):wCtx.lineTo(x,y);
+    } wCtx.stroke();
+  }); wOff++; requestAnimationFrame(drawWave);
+} drawWave();
+
+// ── TAB SWITCHING ────────────────────────────────
+function switchTab(tab,el){
+  document.querySelectorAll('.tool-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tool-panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active'); document.getElementById('panel-'+tab).classList.add('active');
+}
+
+// ── INSTRUMENT ───────────────────────────────────
+let currentInstrument = 'piano';
+function setInstrument(inst,el){
+  currentInstrument=inst;
+  document.querySelectorAll('.inst-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── TONE.JS AUDIO ────────────────────────────────
+let toneReady = false;
+async function ensureTone(){ if(!toneReady){ await Tone.start(); toneReady=true; } }
+
+let activeSynth = null;
+function makeSynth(inst){
+  const opts = {
+    piano:   { type:'triangle', attack:0.02, decay:0.4, sustain:0.3, release:1.4, vol:-4 },
+    guitar:  { type:'sawtooth', attack:0.005,decay:0.25,sustain:0.2, release:0.9, vol:-7 },
+    strings: { type:'sine',     attack:0.35, decay:0.6, sustain:0.75,release:2.2, vol:-5 },
+    pad:     { type:'sine',     attack:0.6,  decay:0.8, sustain:0.9, release:3.0, vol:-6 },
+  }[inst] || opts.piano;
+
+  const reverb = new Tone.Reverb({ decay: inst==='strings'?4:2, wet:0.3 }).toDestination();
+  const synth = new Tone.PolySynth(Tone.Synth, {
+    oscillator:{ type: opts.type },
+    envelope:{ attack:opts.attack, decay:opts.decay, sustain:opts.sustain, release:opts.release },
+    volume: opts.vol
+  }).connect(reverb);
+  return { synth, reverb };
+}
+
+async function playChordTone(noteNames){
+  await ensureTone();
+  if(activeSynth){ try{ activeSynth.synth.releaseAll(); setTimeout(()=>{ activeSynth.synth.dispose(); activeSynth.reverb.dispose(); },2000); }catch(e){} }
+  const { synth, reverb } = makeSynth(currentInstrument);
+  activeSynth = { synth, reverb };
+  const notes = noteNames.map(n=>n+'4');
+  if(currentInstrument==='guitar'){
+    notes.forEach((n,i)=>{ setTimeout(()=>synth.triggerAttackRelease(n,'2n'),i*60); });
+  } else {
+    synth.triggerAttackRelease(notes,'2n');
+  }
+}
+
+// ── PIANO KEYBOARD ───────────────────────────────
+const CHORD_NOTES = {
+  'C':['C','E','G'],'Cm':['C','Eb','G'],'C#':['C#','F','G#'],'C#m':['C#','E','G#'],
+  'Db':['Db','F','Ab'],'D':['D','F#','A'],'Dm':['D','F','A'],'Eb':['Eb','G','Bb'],
+  'E':['E','G#','B'],'Em':['E','G','B'],'F':['F','A','C'],'Fm':['F','Ab','C'],
+  'F#':['F#','A#','C#'],'F#m':['F#','A','C#'],'G':['G','B','D'],'Gm':['G','Bb','D'],
+  'Ab':['Ab','C','Eb'],'A':['A','C#','E'],'Am':['A','C','E'],'A#':['A#','D','F'],
+  'Bb':['Bb','D','F'],'B':['B','D#','F#'],'Bm':['B','D','F#'],'G#':['G#','C','D#']
+};
+
+function buildPiano(){
+  const piano = document.getElementById('piano'); piano.innerHTML='';
+  const whites=['C','D','E','F','G','A','B'];
+  const blacks={'C#':1,'D#':2,'F#':4,'G#':5,'A#':6};
+  whites.forEach(note=>{
+    const k=document.createElement('div'); k.className='white-key'; k.dataset.note=note;
+    k.onclick=()=>{ playChordTone([note]); flashKey(note); }; piano.appendChild(k);
+  });
+  Object.entries(blacks).forEach(([note,pos])=>{
+    const k=document.createElement('div'); k.className='black-key'; k.dataset.note=note;
+    k.style.left=(pos*40-12)+'px';
+    k.onclick=e=>{ e.stopPropagation(); playChordTone([note]); flashKey(note); }; piano.appendChild(k);
+  });
+}
+buildPiano();
+
+function flashKey(note){
+  const k=document.querySelector(`[data-note="${note}"]`); if(!k) return;
+  k.classList.add('active'); setTimeout(()=>k.classList.remove('active'),900);
+}
+
+// ── DRUM MACHINE ─────────────────────────────────
+const PATTERNS={
+  'Darkwave':  {kick:[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],snare:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],hihat:[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,1],clap:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0]},
+  'Trap':      {kick:[1,0,0,1,0,0,1,0,0,0,1,0,0,0,0,0],snare:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],hihat:[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],clap:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0]},
+  'House':     {kick:[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],snare:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],hihat:[0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0],clap:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0]},
+  'Rock':      {kick:[1,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0],snare:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],hihat:[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],clap:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0]},
+  'Jazz':      {kick:[1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0],snare:[0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0],hihat:[1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0],clap:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
+  'Hip-Hop':   {kick:[1,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0],snare:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],hihat:[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],clap:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,1]},
+  'Drum & Bass':{kick:[1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0],snare:[0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],hihat:[1,1,0,1,1,0,1,0,1,1,0,1,1,0,1,0],clap:[0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0]},
+  'Techno':    {kick:[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],snare:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],hihat:[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],clap:[0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1]}
+};
+let curPat=JSON.parse(JSON.stringify(PATTERNS['Darkwave']));
+let playing=false, step=0, drumTimer=null;
+
+function generateDrumPattern(){
+  const g=document.getElementById('drum-genre').value;
+  curPat=JSON.parse(JSON.stringify(PATTERNS[g]||PATTERNS['Darkwave']));
+  renderGrid();
+}
+function renderGrid(){
+  const g=document.getElementById('drum-grid'); g.innerHTML='';
+  Object.entries(curPat).forEach(([inst,steps])=>{
+    const row=document.createElement('div'); row.className='drum-row';
+    const lbl=document.createElement('div'); lbl.className='drum-label'; lbl.textContent=inst; row.appendChild(lbl);
+    const sd=document.createElement('div'); sd.className='drum-steps';
+    steps.forEach((on,i)=>{
+      const s=document.createElement('div');
+      s.className='drum-step'+(on?' on':''); s.dataset.inst=inst; s.dataset.step=i;
+      s.onclick=()=>{ curPat[inst][i]=curPat[inst][i]?0:1; s.classList.toggle('on'); };
+      sd.appendChild(s);
+    }); row.appendChild(sd); g.appendChild(row);
+  });
+}
+renderGrid();
+
+async function hitDrum(type){
+  await ensureTone();
+  const now=Tone.now();
+  if(type==='kick'){
+    const s=new Tone.MembraneSynth({pitchDecay:0.05,octaves:6,envelope:{attack:0.001,decay:0.3,sustain:0,release:0.1}}).toDestination();
+    s.triggerAttackRelease('C1','8n',now); setTimeout(()=>s.dispose(),600);
+  } else if(type==='snare'){
+    const s=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:0.001,decay:0.15,sustain:0,release:0.05}}).toDestination();
+    s.triggerAttackRelease('8n',now); setTimeout(()=>s.dispose(),400);
+  } else if(type==='hihat'){
+    const f=new Tone.Filter(9000,'highpass').toDestination();
+    const s=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:0.001,decay:0.04,sustain:0,release:0.01}}).connect(f);
+    s.triggerAttackRelease('32n',now); setTimeout(()=>{ s.dispose(); f.dispose(); },200);
+  } else if(type==='clap'){
+    const s=new Tone.NoiseSynth({noise:{type:'pink'},envelope:{attack:0.001,decay:0.1,sustain:0,release:0.04}}).toDestination();
+    s.triggerAttackRelease('8n',now); setTimeout(()=>s.dispose(),400);
+  }
+}
+
+function updateBPMDisplay(){ document.getElementById('bpm-display').textContent=document.getElementById('drum-bpm').value||120; }
+
+function togglePlay(){
+  playing=!playing;
+  document.getElementById('play-btn').textContent=playing?'⏹':'▶';
+  if(playing){
+    const bpm=parseInt(document.getElementById('drum-bpm').value)||120;
+    document.getElementById('bpm-display').textContent=bpm;
+    const iv=(60/bpm/4)*1000;
+    drumTimer=setInterval(()=>{
+      document.querySelectorAll('.drum-step.playing').forEach(s=>s.classList.remove('playing'));
+      Object.keys(curPat).forEach(inst=>{
+        if(curPat[inst][step]){
+          hitDrum(inst);
+          const el=document.querySelector(`[data-inst="${inst}"][data-step="${step}"]`);
+          if(el) el.classList.add('playing');
+        }
+      });
+      step=(step+1)%16;
+    },iv);
+  } else {
+    clearInterval(drumTimer); step=0;
+    document.querySelectorAll('.drum-step.playing').forEach(s=>s.classList.remove('playing'));
+  }
+}
+
+// ── DICE SYSTEM ──────────────────────────────────
+const DICE_POOL = {
+  lyrics:[
+    "pretending you're okay when you're not",
+    "checking your phone waiting for a text that never comes",
+    "missing someone who's still alive",
+    "falling for someone you know you shouldn't",
+    "the moment you realise they don't love you back",
+    "being in a crowded room feeling completely alone",
+    "leaving a city and everyone in it behind",
+    "loving someone from a distance without them knowing",
+    "the last conversation before a breakup",
+    "staying in something that stopped working",
+    "feeling nothing after too much pain",
+    "trying to forget someone who keeps showing up in your dreams",
+    "choosing yourself for the first time",
+    "3am and you still can't sleep",
+    "growing apart from your best friend without saying why"
+  ],
+  mood:[
+    "driving alone at 3am, rain on the window, nobody to call",
+    "sitting in your old room after years away, nothing feels the same",
+    "the silence after a fight when neither of you speaks",
+    "watching someone you love leave and not being able to say stop",
+    "standing on a rooftop in a city that doesn't know your name",
+    "the last hour of a night you don't want to end",
+    "scrolling through old photos at 2am",
+    "walking alone through a market in a city where no one knows you",
+    "the feeling right before something changes forever",
+    "lying in bed at noon, everything feels heavy"
+  ],
+  hook:[
+    "the feeling of being emotionally numb but pretending you're fine",
+    "loving someone who doesn't see you the way you see them",
+    "the moment you decide to stop waiting",
+    "missing the old version of yourself",
+    "choosing to walk away even when it hurts",
+    "being addicted to someone who's wrong for you",
+    "the quiet after heartbreak when you finally feel nothing",
+    "falling in love when you promised yourself you wouldn't"
+  ],
+  titles:[
+    "urban isolation, late night drives, fluorescent lights",
+    "the space between loving someone and letting go",
+    "digital loneliness, scrolling through life instead of living it",
+    "coming back to a place that doesn't feel like home anymore",
+    "the version of yourself you left somewhere",
+    "loving in silence, never saying what you mean",
+    "the night before everything changed"
+  ],
+  names:[
+    "solo artist, dark and introspective, electronic beats with raw vocals",
+    "bedroom producer, lo-fi and melancholic, influenced by The Weeknd and James Blake",
+    "band of three, post-punk energy, heavy guitars and atmospheric synths",
+    "solo singer-songwriter, acoustic and emotional, storytelling through simple lyrics",
+    "electronic producer, cinematic and dark, influenced by film scores and trap",
+    "alternative R&B artist, soft and vulnerable, urban sound with poetic lyrics"
+  ],
+    "I make music about things people feel but don't say out loud",
+    "started making music in my bedroom at 17 and never stopped",
+    "I write about the messy, quiet, complicated parts of being human",
+    "my sound lives somewhere between 2am and things you can't explain in daylight"
+  ]
+};
+
+function rollDice(inputId, type){
+  const pool=DICE_POOL[type]||DICE_POOL.lyrics;
+  const picks=[...pool].sort(()=>Math.random()-0.5).slice(0,3);
+  const container=document.getElementById(type+'-pool');
+  container.innerHTML='';
+  picks.forEach(idea=>{
+    const chip=document.createElement('span'); chip.className='dice-chip'; chip.textContent=idea;
+    chip.onclick=()=>{ document.getElementById(inputId).value=idea; container.innerHTML=''; };
+    container.appendChild(chip);
+  });
+  const moreBtn=document.createElement('button'); moreBtn.className='more-ideas-btn'; moreBtn.textContent='✦ AI ideas';
+  moreBtn.onclick=()=>aiMoreIdeas(inputId,type,container);
+  container.appendChild(moreBtn);
+}
+
+async function aiMoreIdeas(inputId,type,container){
+  const moreBtn=container.querySelector('.more-ideas-btn');
+  if(moreBtn) moreBtn.textContent='...';
+  try {
+    const r=await callClaude(`Give 3 unique, emotionally specific song concept ideas for a ${type} writing tool. Each should be a specific human feeling or real-life situation described in 8-15 words. Raw and real, not cliché. Return only the 3 ideas, one per line, no numbers or bullets.`);
+    const ideas=r.trim().split('\n').filter(l=>l.trim()).slice(0,3);
+    container.innerHTML='';
+    ideas.forEach(idea=>{
+      const chip=document.createElement('span'); chip.className='dice-chip'; chip.textContent=idea.trim();
+      chip.onclick=()=>{ document.getElementById(inputId).value=idea.trim(); container.innerHTML=''; };
+      container.appendChild(chip);
+    });
+    const again=document.createElement('button'); again.className='more-ideas-btn'; again.textContent='✦ More AI ideas';
+    again.onclick=()=>aiMoreIdeas(inputId,type,container);
+    container.appendChild(again);
+  } catch(e){ if(moreBtn) moreBtn.textContent='✦ AI ideas'; }
+}
+
+// ── CLAUDE API ───────────────────────────────────
+async function callClaude(prompt){
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, messages:[{role:'user',content:prompt}] })
+  });
+  const d=await r.json();
+  if(d.error) throw new Error(d.error.message);
+  return d.content[0].text;
+}
+
+function setLoading(id,on){
+  document.getElementById(id+'-loading').classList.toggle('show',on);
+  document.getElementById(id+'-btn').disabled=on;
+}
+
+// ── CHORD GENERATOR ──────────────────────────────
+async function generateChords(){
+  setLoading('chord',true);
+  const key=document.getElementById('chord-key').value;
+  const scale=document.getElementById('chord-scale').value;
+  const genre=document.getElementById('chord-genre').value;
+  const mood=document.getElementById('chord-mood').value;
+  try{
+    const r=await callClaude(`Music theory expert. Generate a chord progression.
+Key: ${key} ${scale} | Genre: ${genre} | Mood: ${mood}
+
+Respond EXACTLY in this format only:
+CHORDS: Am - F - C - G
+FEEL: [2 casual sentences about the emotional feel — talk like a producer not a professor]
+TIP: [One specific production tip for this genre, keep it practical]`);
+
+    const cm=r.match(/CHORDS:\s*(.+)/), fm=r.match(/FEEL:\s*(.+)/), tm=r.match(/TIP:\s*(.+)/);
+    const chords=(cm?cm[1]:r).split(/\s*-\s*/).map(c=>c.trim()).filter(Boolean);
+    const chips=document.getElementById('chord-chips'); chips.innerHTML='';
+    chords.forEach(chord=>{
+      const chip=document.createElement('div'); chip.className='chord-chip';
+      chip.innerHTML=chord+'<span class="chord-sub">tap to play</span>';
+      chip.onclick=()=>{
+        const notes=CHORD_NOTES[chord]||['C','E','G'];
+        playChordTone(notes); notes.forEach(n=>flashKey(n));
+      };
+      chips.appendChild(chip);
+    });
+    document.getElementById('chord-info').textContent=(fm?fm[1]:'')+'\n\n'+(tm?'💡 '+tm[1]:'');
+    document.getElementById('chord-output').classList.add('show');
+  } catch(e){ alert('Error generating chords. Try again.'); }
+  setLoading('chord',false);
+}
+
+// ── MOOD TO CHORD ────────────────────────────────
+async function generateMoodChord(){
+  const mood=document.getElementById('mood-input').value;
+  if(!mood){ alert('Describe your mood first!'); return; }
+  setLoading('mood',true);
+  try{
+    const r=await callClaude(`You're a producer who thinks in feelings. The musician describes: "${mood}"
+
+Give them:
+1. The chord progression that matches (e.g. Cm - Ab - Eb - Bb)
+2. Why these chords work — explain it like you're talking to a friend, not a textbook
+3. Tempo suggestion (number + vibe, e.g. "72bpm — slow, heavy, no rush")
+4. One texture or instrument suggestion
+
+Keep it conversational and specific. No jargon.`);
+    document.getElementById('mood-text').textContent=r;
+    document.getElementById('mood-output').classList.add('show');
+  } catch(e){ alert('Error. Try again.'); }
+  setLoading('mood',false);
+}
+
+// ── GENRE BLENDER ────────────────────────────────
+async function generateGenreBlend(){
+  setLoading('genre',true);
+  const a=document.getElementById('genre-a').value, b=document.getElementById('genre-b').value;
+  try{
+    const r=await callClaude(`Creative music producer. Blend: ${a} + ${b}
+
+Give:
+1. A name for this hybrid genre
+2. What it sounds like — describe it like you're telling a friend about a track you heard
+3. Chord progressions that work for this blend
+4. Tempo and rhythm feel
+5. 2-3 real artists that come close to this sound
+6. One specific production trick for this blend
+
+Be specific and conversational.`);
+    document.getElementById('genre-text').textContent=r;
+    document.getElementById('genre-output').classList.add('show');
+  } catch(e){ alert('Error. Try again.'); }
+  setLoading('genre',false);
+}
+
+// ── LYRICS AI ────────────────────────────────────
+async function generateLyrics(){
+  const theme=document.getElementById('lyrics-theme').value;
+  if(!theme){ alert("Tell me what your song is about!"); return; }
+  setLoading('lyrics',true);
+  const genre=document.getElementById('lyrics-genre').value;
+  const lang=document.getElementById('lyrics-lang').value;
+  try{
+    const r=await callClaude(`You write lyrics for real musicians, not for demos.
+
+Write a short song in ${lang} for a ${genre} track about: "${theme}"
+
+RULES — every single one matters:
+— Write like you're texting someone at 2am, not writing a school poem
+— Contractions always: I'm / don't / you're / can't / won't
+— BANNED words: linger, serenade, echo, eternal, soul, surrender, shatter, embrace, illuminate, melancholy, solace, yearning, whisper, hollow, void, wither, silhouette, symphony, cascade — or anything that sounds like a dictionary
+— Max 6 syllables per line — short, punchy, singable
+— Exactly 4 lines per section — no more, no less
+— End sounds should flow when sung — think phonetics not just rhyme
+— Imperfect rhymes are fine, forced rhymes are not
+— One feeling per section, don't mix emotions
+— Less is more — don't over-explain the feeling
+
+Output format only:
+[Verse]
+
+[Chorus]
+
+[Verse 2]
+
+[Bridge]`);
+    document.getElementById('lyrics-text').textContent=r;
+    document.getElementById('lyrics-output').classList.add('show');
+  } catch(e){ alert('Error. Try again.'); }
+  setLoading('lyrics',false);
+}
+
+// ── HOOK GENERATOR ───────────────────────────────
+async function generateHook(){
+  const topic=document.getElementById('hook-topic').value;
+  if(!topic){ alert("Tell me what your song is about!"); return; }
+  setLoading('hook',true);
+  const genre=document.getElementById('hook-genre').value;
+  const lang=document.getElementById('hook-lang').value;
+  const emotion=document.getElementById('hook-emotion').value;
+  try{
+    const r=await callClaude(`Hit songwriter. Write 3 hooks in ${lang}.
+Genre: ${genre} | Emotion: ${emotion} | Topic: "${topic}"
+
+RULES:
+— Max 6 syllables per line, exactly 4 lines per hook
+— Must sound great when sung — rhythm and phonetics first
+— Simple words only — nothing that sounds like a thesaurus
+— Contractions always
+— Each hook = a different angle on the same feeling
+
+Format:
+HOOK 1:
+[4 lines]
+MELODY: [simple description — e.g. "flat then rises on the last word"]
+
+HOOK 2:
+[4 lines]
+MELODY: [simple description]
+
+HOOK 3:
+[4 lines]
+MELODY: [simple description]`);
+    document.getElementById('hook-text').textContent=r;
+    document.getElementById('hook-output').classList.add('show');
+  } catch(e){ alert('Error. Try again.'); }
+  setLoading('hook',false);
+}
+
+// ── SONG TITLES ──────────────────────────────────
+async function generateTitles(){
+  const theme=document.getElementById('title-theme').value;
+  if(!theme){ alert("Describe your music first!"); return; }
+  setLoading('titles',true);
+  const genre=document.getElementById('title-genre').value;
+  const type=document.getElementById('title-type').value;
+  try{
+    const r=await callClaude(`Generate 10 ${type.toLowerCase()} for a ${genre} artist.
+Theme: "${theme}"
+
+Rules:
+— 1 to 4 words each ideally — short and memorable
+— Evocative, not obvious — don't just describe the theme literally
+— Nothing generic or overdone
+— Mix: abstract, specific, emotional, visual approaches
+— No quotes around titles
+
+For each, one line (max 10 words) on the feeling it captures.`);
+    document.getElementById('titles-text').textContent=r;
+    document.getElementById('titles-output').classList.add('show');
+  } catch(e){ alert('Error. Try again.'); }
+  setLoading('titles',false);
+}
+
+// ── ARTIST BIO ───────────────────────────────────
+async function generateBio(){
+  const name=document.getElementById('bio-name').value;
+  const info=document.getElementById('bio-info').value;
+  if(!name||!info){ alert("Fill in your name and some info!"); return; }
+  setLoading('bio',true);
+  const genre=document.getElementById('bio-genre').value;
+  const tone=document.getElementById('bio-tone').value;
+  const length=document.getElementById('bio-length').value;
+  try{
+    const r=await callClaude(`Write a ${length} artist bio for ${name}.
+Genre: ${genre} | Tone: ${tone}
+Info: "${info}"
+
+Rules:
+— Third person
+— Sounds like a real human wrote it, not a content generator
+— No clichés: no "sonic journey", "pushing boundaries", "unique sound", "captivating listeners"
+— Use the specific details from the info — make it feel personal
+— Avoid flowery or academic language
+— Each sentence should be something a person would actually say about an artist`);
+    document.getElementById('bio-text').textContent=r;
+    document.getElementById('bio-output').classList.add('show');
+  } catch(e){ alert('Error. Try again.'); }
+  setLoading('bio',false);
+}
+
+// ── ARTIST NAMES ─────────────────────────────────
+async function generateNames(){
+  setLoading('names',true);
+  const genre=document.getElementById('names-genre').value;
+  const vibe=document.getElementById('names-vibe').value;
+  const desc=document.getElementById('names-desc').value;
+  try{
+    const r=await callClaude(`You find artist names for musicians. Not generic, not safe — names that actually feel like something.
+
+Genre: ${genre} | Vibe: ${vibe}
+${desc?'About them: "'+desc+'"':''}
+
+Generate 12 artist name ideas. Mix different approaches:
+— Single word names (invented or real words with a new meaning)
+— Two word combinations that hit different
+— Names that sound like a feeling, not just a word
+— Names that work visually (think logo, cover art)
+— Some abstract, some direct, some foreign-sounding
+
+Rules:
+— Nothing that's already a famous artist name
+— Nothing that sounds like a band name generator spit it out
+— Short is usually better — 1 to 3 words max
+— Say why each one works in max 8 words
+
+Format each as:
+NAME — [why it works]`);
+    document.getElementById('names-text').textContent=r;
+    document.getElementById('names-output').classList.add('show');
+  } catch(e){ alert('Error. Try again.'); }
+  setLoading('names',false);
+}
+
+// ── COPY ─────────────────────────────────────────
+function copyOutput(id){
+  navigator.clipboard.writeText(document.getElementById(id).textContent);
+  event.target.textContent='Copied!';
+  setTimeout(()=>event.target.textContent='Copy',2000);
+}
+</script>
+</body></html>
