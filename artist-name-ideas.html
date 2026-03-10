@@ -536,14 +536,14 @@ async function aiMoreIdeas(inputId,type,container){
 
 // ── CLAUDE API ───────────────────────────────────
 async function callClaude(prompt){
-  const r=await fetch('https://api.anthropic.com/v1/messages',{
+  const r=await fetch('/api/generate',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, messages:[{role:'user',content:prompt}] })
   });
   const d=await r.json();
   if(d.error) throw new Error(d.error.message);
-  return d.content[0].text;
+  return d.result;
 }
 
 function setLoading(id,on){
