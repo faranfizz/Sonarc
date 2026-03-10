@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { prompt } = req.body;
-  if (!prompt) return res.status(400).json({ error: 'No prompt provided' });
+  if (!prompt) return res.status(400).json({ error: 'No prompt' });
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -18,8 +18,8 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
+        model: 'claude-opus-4-6',
+        max_tokens: 1024,
         messages: [{ role: 'user', content: prompt }]
       })
     });
