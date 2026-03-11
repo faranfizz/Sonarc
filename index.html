@@ -696,7 +696,7 @@ function buildPiano(){
     k.onclick=e=>{ e.stopPropagation(); playChordTone([note]); flashKey(note); }; piano.appendChild(k);
   });
 }
-buildPiano();
+if(document.getElementById("piano")) buildPiano();
 
 function flashKey(note){
   const k=document.querySelector(`[data-note="${note}"]`); if(!k) return;
@@ -736,7 +736,7 @@ function renderGrid(){
     }); row.appendChild(sd); g.appendChild(row);
   });
 }
-renderGrid();
+if(document.getElementById("drum-grid")) renderGrid();
 
 async function hitDrum(type){
   await ensureTone();
@@ -784,6 +784,8 @@ function togglePlay(){
 }
 
 // ── DICE SYSTEM ──────────────────────────────────
+
+
 const DICE_POOL = {
   lyrics:[
     "pretending you're okay when you're not",
