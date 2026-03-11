@@ -853,6 +853,7 @@ function rollDice(inputId, type){
   const pool=DICE_POOL[type]||DICE_POOL.lyrics;
   const picks=[...pool].sort(()=>Math.random()-0.5).slice(0,3);
   const container=document.getElementById(type+'-pool');
+  if(!container) return;
   container.innerHTML='';
   picks.forEach(idea=>{
     const chip=document.createElement('span'); chip.className='dice-chip'; chip.textContent=idea;
@@ -985,24 +986,25 @@ async function generateLyrics(){
   const genre=document.getElementById('lyrics-genre').value;
   const lang=document.getElementById('lyrics-lang').value;
   try{
-    const r=await callClaude(`You are a songwriter. Write brutal, honest, specific lyrics. Not pretty. Not poetic. Real.
+    const r=await callClaude(`You are a professional hit songwriter. You've written for The Weeknd, Billie Eilish, Drake, Olivia Rodrigo, Zayn, SZA, BTS. You know what makes lyrics actually work.
 
-LANGUAGE: Write EVERY word in ${lang}. No English unless ${lang} is English.
+LANGUAGE: Write EVERY word in ${lang}. Zero English if ${lang} is not English. Non-negotiable.
 GENRE: ${genre}
 TOPIC: "${theme}"
 
-RULES:
-— Specific over vague. Not "I'm hurting" — say what actually happened
-— Short lines. Max 7 syllables. Cut every word that doesn't pull weight
-— No rhyme schemes. Only rhyme if it sounds natural when sung
-— No metaphors unless they're dead simple
-— No: soul, heart, tears, broken, forever, fire, rise, light, shadow, echo, void, hollow, darkness, pain, scream, breathe — these are banned
-— Contractions only: I'm not I am, don't not do not
-— Write like a real person said it, not a songwriter trying to sound deep
-— Each section = one specific moment or feeling, not a summary
+WHAT MAKES REAL HITS WORK:
+- Lines sound like something a person said, not wrote
+- Short, conversational — the kind you'd text at 2am
+- Specific details: not "I miss you" but "I still got your hoodie"
+- Choruses are simple, singable, repeat naturally
+- Verses tell the story, chorus delivers the feeling
+- Rhymes feel accidental not forced
+- The best lines feel obvious after you hear them
 
-Output only this, no labels explanation:
-[Verse]
+BANNED WORDS: serenade, eternal, soul, surrender, shatter, illuminate, melancholy, solace, yearning, silhouette, symphony, cascade, hollow, void, wither, whisper, linger
+
+OUTPUT FORMAT — exactly this, nothing else:
+[Verse 1]
 
 [Chorus]
 
