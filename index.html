@@ -336,6 +336,7 @@ nav a{text-decoration:none;}
         <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.1em;">BPM</div>
       </div>
       <button class="generate-btn" onclick="generateDrumPattern()">🥁 New Pattern</button>
+      <button class="generate-btn" onclick="downloadDrumMIDI()" style="background:transparent;border:1px solid var(--accent)">&#x2B07; Download MIDI</button>
     </div>
   </div>
 
@@ -601,7 +602,7 @@ nav a{text-decoration:none;}
   </div>
   <p class="footer-copy">2026 Sonarc. All rights reserved.</p>
 </footer>
-<script>
+<script>// v3.0
 // ── WAVE ANIMATION ──────────────────────────────
 const canvas = document.getElementById('waveCanvas');
 const wCtx = canvas.getContext('2d');
@@ -986,6 +987,8 @@ async function generateLyrics(){
   try{
     const r=await callClaude(`You write lyrics for real musicians, not for demos.
 
+LANGUAGE REQUIREMENT: Write EVERY word in ${lang}. Zero English words if ${lang} is not English. This is non-negotiable.
+
 Write a short song in ${lang} for a ${genre} track about: "${theme}"
 
 RULES — every single one matters:
@@ -1358,19 +1361,17 @@ function downloadChordMIDI(){
 
 function downloadDrumMIDI(){
   const DRUM_MAP={kick:36,snare:38,hihat:42,openhat:46,clap:39,tom:45,cymbal:49,rimshot:37};
-  const grid=document.querySelectorAll('.drum-track');
-  if(!grid.length) return;
-  const ev=[];
-  const tempo=Math.round(60000000/(currentBPM||120));
-  ev.push(0x00,0xFF,0x51,0x03,(tempo>>16)&0xFF,(tempo>>8)&0xFF,tempo&0xFF);
+  if(!curPat) return;
+  const bpm=parseInt(document.getElementById('drum-bpm').value)||120;
+  const tempo=Math.round(60000000/bpm);
   const stepLen=120;
-  grid.forEach(track=>{
-    const inst=track.dataset.inst;
+  const ev=[];
+  ev.push(0x00,0xFF,0x51,0x03,(tempo>>16)&0xFF,(tempo>>8)&0xFF,tempo&0xFF);
+  Object.entries(curPat).forEach(([inst,steps])=>{
     const mn=DRUM_MAP[inst]||38;
-    const steps=track.querySelectorAll('.drum-step');
     let tick=0;
-    steps.forEach((s,i)=>{
-      if(s.classList.contains('active')){
+    steps.forEach(on=>{
+      if(on){
         ev.push(...varLen(tick),0x99,mn,100);
         ev.push(...varLen(stepLen),0x89,mn,0);
         tick=0;
