@@ -870,7 +870,7 @@ async function aiMoreIdeas(inputId,type,container){
   if(moreBtn) moreBtn.textContent='...';
   try {
     const r=await callClaude(`Give 3 unique, emotionally specific song concept ideas for a ${type} writing tool. Each should be a specific human feeling or real-life situation described in 8-15 words. Raw and real, not cliché. Return only the 3 ideas, one per line, no numbers or bullets.`);
-    const ideas=r.trim().split('\n').filter(l=>l.trim()).slice(0,3);
+    const ideas=r.trim().split(String.fromCharCode(10)).filter(l=>l.trim()).slice(0,3);
     container.innerHTML='';
     ideas.forEach(idea=>{
       const chip=document.createElement('span'); chip.className='dice-chip'; chip.textContent=idea.trim();
