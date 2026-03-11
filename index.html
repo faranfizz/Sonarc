@@ -278,6 +278,7 @@ nav a{text-decoration:none;}
       </div>
       <div class="chord-display" id="chord-chips"></div>
       <div class="chord-info" id="chord-info"></div>
+      <button class="generate-btn" id="chord-midi-btn" onclick="downloadChordMIDI()" style="display:none;margin-bottom:16px;background:transparent;border:1px solid var(--accent)">&#x2B07; Download MIDI</button>
       <div class="piano-wrap">
         <div class="panel-tag" style="margin-top:20px;margin-bottom:12px">// Click any chord to hear it</div>
         <div class="piano" id="piano"></div>
@@ -338,38 +339,37 @@ nav a{text-decoration:none;}
     </div>
   </div>
 
-  <!-- GENRE BLENDER --><!-- GENRE BLENDER -->
-  <div class="tool-panel" id="panel-genre">
-    <div class="panel-tag">// Tool 04</div>
-    <div class="panel-title">Genre Blender</div>
-    <p class="panel-desc">Mix two genres and get a unique sound description, chord ideas and production tips.</p>
-    <div class="controls-grid" style="margin-bottom:20px;">
+  <!-- SCALE EXPLORER --><!-- SCALE EXPLORER -->
+  <div class="tool-panel" id="panel-scale">
+    <div class="panel-tag">// Scale Explorer</div>
+    <div class="panel-title">Scale Explorer</div>
+    <p class="panel-desc">Pick any scale. See the notes on a piano, hear how it sounds, get the chords that fit.</p>
+    <div class="controls-grid">
       <div class="control-group">
-        <label class="control-label">Genre A</label>
-        <select id="genre-a">
-          <option>Darkwave</option><option>Jazz</option><option>Classical</option>
-          <option>Hip-Hop</option><option>R&B</option><option>Metal</option>
-          <option>Bossa Nova</option><option>Reggae</option><option>Folk</option>
-          <option>Bollywood</option><option>Afrobeats</option>
+        <label class="control-label">Root Note</label>
+        <select id="scale-root">
+          <option>C</option><option>C#</option><option>D</option><option>D#</option>
+          <option>E</option><option>F</option><option>F#</option><option>G</option>
+          <option>G#</option><option>A</option><option>A#</option><option>B</option>
         </select>
       </div>
       <div class="control-group">
-        <label class="control-label">Genre B</label>
-        <select id="genre-b">
-          <option>Trap</option><option>Electronic</option><option>Pop</option>
-          <option>Ambient</option><option>Punk</option><option>Gospel</option>
-          <option>Flamenco</option><option>Drum & Bass</option><option>Indie</option>
-          <option>Lo-fi</option><option>K-Pop</option>
+        <label class="control-label">Scale</label>
+        <select id="scale-type">
+          <option>Minor</option><option>Major</option><option>Dorian</option>
+          <option>Phrygian</option><option>Lydian</option><option>Mixolydian</option>
+          <option>Pentatonic Minor</option><option>Pentatonic Major</option><option>Blues</option>
         </select>
       </div>
     </div>
-    <div class="btn-row">
-      <button class="generate-btn" id="genre-btn" onclick="generateGenreBlend()">🎭 Blend Genres</button>
-      <div class="loading-dots" id="genre-loading"><span></span><span></span><span></span></div>
+    <div class="btn-row" style="gap:12px">
+      <button class="generate-btn" onclick="exploreScale()">Show Scale</button>
+      <button class="generate-btn" style="background:transparent;border:1px solid var(--accent)" onclick="playScale()">&#x25B6; Play Scale</button>
     </div>
-    <div class="output-box" id="genre-output">
-      <div class="output-label"><span>Blended Sound</span><button class="copy-btn" onclick="copyOutput('genre-text')">Copy</button></div>
-      <div class="output-content" id="genre-text"></div>
+    <div class="output-box show" id="scale-output">
+      <div class="output-label"><span>Scale Notes</span></div>
+      <div id="scale-piano" style="margin:16px 0"></div>
+      <div class="chord-info" id="scale-info"></div>
     </div>
   </div>
 
@@ -414,179 +414,173 @@ nav a{text-decoration:none;}
     </div>
   </div>
 
-<!-- HOOK GENERATOR -->
-  <div class="tool-panel" id="panel-hook">
-    <div class="panel-tag">// Tool 06</div>
-    <div class="panel-title">Hook Generator</div>
-    <p class="panel-desc">Catchy, singable hooks with melody suggestions. Built for real musicians.</p>
-    <div class="controls-grid" style="margin-bottom:16px;">
+<!-- BPM TAPPER -->
+  <div class="tool-panel" id="panel-bpm">
+    <div class="panel-tag">// BPM Tapper</div>
+    <div class="panel-title">BPM Tapper</div>
+    <p class="panel-desc">Tap to the beat. Find the tempo of any song in your head.</p>
+    <div style="text-align:center;padding:40px 20px">
+      <div id="bpm-display" style="font-family:'Bebas Neue',sans-serif;font-size:clamp(80px,18vw,160px);color:var(--accent);line-height:1;transition:transform 0.1s">--</div>
+      <div style="font-family:var(--mono);font-size:13px;color:var(--muted);letter-spacing:0.2em;margin-bottom:36px">BPM</div>
+      <button class="generate-btn" id="tap-btn" onclick="tapBPM()" style="font-size:20px;padding:24px 80px;letter-spacing:6px">TAP</button>
+      <div style="margin-top:24px">
+        <button class="copy-btn" onclick="resetBPM()">Reset</button>
+      </div>
+      <div id="bpm-hint" style="font-family:var(--mono);font-size:12px;color:var(--muted2);margin-top:24px;letter-spacing:0.05em">Tap at least 4 times for accuracy</div>
+    </div>
+  </div>
+
+  <!-- KEY FINDER --><!-- KEY FINDER -->
+  <div class="tool-panel" id="panel-keyfinder">
+    <div class="panel-tag">// Key Finder</div>
+    <div class="panel-title">Key Finder</div>
+    <p class="panel-desc">Enter the chords in your song and find out what key you're in.</p>
+    <div class="control-group" style="margin-bottom:8px">
+      <label class="control-label">Your chords</label>
+      <textarea id="keyfinder-chords" placeholder="e.g. Am, F, C, G  or  Dm7 - Gm - Bb - F"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="generate-btn" id="keyfinder-btn" onclick="findKey()">Find Key</button>
+      <div class="loading-dots" id="keyfinder-loading"><span></span><span></span><span></span></div>
+    </div>
+    <div class="output-box" id="keyfinder-output">
+      <div class="output-label"><span>Your Key</span><button class="copy-btn" onclick="copyOutput('keyfinder-text')">Copy</button></div>
+      <div class="output-content" id="keyfinder-text"></div>
+    </div>
+  </div>
+
+  <!-- MELODY GENERATOR --><!-- MELODY GENERATOR -->
+  <div class="tool-panel" id="panel-melody">
+    <div class="panel-tag">// Melody Generator</div>
+    <div class="panel-title">Melody Generator</div>
+    <p class="panel-desc">Enter your chords and get a singable melody with notes. Download as MIDI.</p>
+    <div class="controls-grid" style="margin-bottom:16px">
       <div class="control-group">
-        <label class="control-label">Genre</label>
-        <select id="hook-genre">
+        <label class="control-label">Key</label>
+        <select id="melody-key">
+          <option>C</option><option>C#</option><option>D</option><option>D#</option>
+          <option>E</option><option>F</option><option>F#</option><option>G</option>
+          <option>G#</option><option>A</option><option>A#</option><option>B</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label class="control-label">Scale</label>
+        <select id="melody-scale">
+          <option>Minor</option><option>Major</option><option>Dorian</option>
+          <option>Pentatonic Minor</option><option>Pentatonic Major</option><option>Blues</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label class="control-label">Style</label>
+        <select id="melody-style">
           <option>Dark R&B</option><option>Pop</option><option>Hip-Hop</option>
-          <option>Darkwave</option><option>Electronic</option><option>Rock</option>
-        </select>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Language</label>
-        <select id="hook-lang">
-          <option>English</option><option>Hindi</option><option>Tamil</option>
-          <option>Malayalam</option><option>Urdu</option><option>Arabic</option>
-          <option>Spanish</option><option>French</option><option>Portuguese</option>
-        </select>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Emotion</label>
-        <select id="hook-emotion">
-          <option>Longing</option><option>Euphoric</option><option>Heartbroken</option>
-          <option>Defiant</option><option>Mysterious</option><option>Nostalgic</option>
+          <option>Darkwave</option><option>Indie</option><option>Electronic</option><option>Folk</option>
         </select>
       </div>
     </div>
-    <div class="control-group" style="margin-bottom:8px;">
-      <label class="control-label">What's your song about?</label>
-      <div class="input-with-dice">
-        <textarea id="hook-topic" placeholder="e.g. the moment you stop waiting for someone to change..."></textarea>
-        <button class="dice-btn" onclick="rollDice('hook-topic','hook')" title="Random idea">🎲</button>
-      </div>
-      <div class="dice-pool" id="hook-pool"></div>
+    <div class="control-group" style="margin-bottom:8px">
+      <label class="control-label">Chord progression</label>
+      <textarea id="melody-chords" placeholder="e.g. Am - F - C - G"></textarea>
     </div>
     <div class="btn-row">
-      <button class="generate-btn" id="hook-btn" onclick="generateHook()">🎤 Generate Hook</button>
-      <div class="loading-dots" id="hook-loading"><span></span><span></span><span></span></div>
+      <button class="generate-btn" id="melody-btn" onclick="generateMelody()">Generate Melody</button>
+      <div class="loading-dots" id="melody-loading"><span></span><span></span><span></span></div>
     </div>
-    <div class="output-box" id="hook-output">
-      <div class="output-label"><span>Hook Ideas</span><button class="copy-btn" onclick="copyOutput('hook-text')">Copy</button></div>
-      <div class="output-content" id="hook-text"></div>
+    <div class="output-box" id="melody-output">
+      <div class="output-label"><span>Your Melody</span><button class="copy-btn" onclick="copyOutput('melody-text')">Copy</button></div>
+      <div class="output-content" id="melody-text"></div>
+      <button class="generate-btn" id="melody-midi-btn" onclick="downloadMelodyMIDI()" style="display:none;margin-top:16px;background:transparent;border:1px solid var(--accent)">&#x2B07; Download MIDI</button>
     </div>
   </div>
 
-  <!-- SONG TITLES --><!-- SONG TITLES -->
-  <div class="tool-panel" id="panel-titles">
-    <div class="panel-tag">// Tool 07</div>
-    <div class="panel-title">Song Titles</div>
-    <p class="panel-desc">Unique, evocative song and album titles that actually feel like something.</p>
-    <div class="controls-grid" style="margin-bottom:16px;">
-      <div class="control-group">
-        <label class="control-label">Genre</label>
-        <select id="title-genre">
-          <option>Darkwave</option><option>Dark R&B</option><option>Pop</option>
-          <option>R&B</option><option>Hip-Hop</option><option>Rock</option><option>Electronic</option>
-        </select>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Type</label>
-        <select id="title-type">
-          <option>Song Titles</option><option>Album Names</option><option>EP Names</option><option>Both</option>
-        </select>
-      </div>
-    </div>
-    <div class="control-group" style="margin-bottom:8px;">
-      <label class="control-label">Describe your music or theme</label>
-      <div class="input-with-dice">
-        <textarea id="title-theme" placeholder="e.g. urban isolation, late nights, emotional distance..."></textarea>
-        <button class="dice-btn" onclick="rollDice('title-theme','titles')" title="Random idea">🎲</button>
-      </div>
-      <div class="dice-pool" id="titles-pool"></div>
-    </div>
-    <div class="btn-row">
-      <button class="generate-btn" id="titles-btn" onclick="generateTitles()">💿 Generate Titles</button>
-      <div class="loading-dots" id="titles-loading"><span></span><span></span><span></span></div>
-    </div>
-    <div class="output-box" id="titles-output">
-      <div class="output-label"><span>Title Ideas</span><button class="copy-btn" onclick="copyOutput('titles-text')">Copy</button></div>
-      <div class="output-content" id="titles-text"></div>
-    </div>
-  </div>
+  <!-- ARTIST PROFILE --><!-- ARTIST PROFILE -->
+  <div class="tool-panel" id="panel-artist">
+    <div class="panel-tag">// Artist Profile</div>
+    <div class="panel-title">Artist Profile</div>
+    <p class="panel-desc">Generate your artist name and bio in one place.</p>
 
-  <!-- ARTIST NAME IDEAS --><!-- ARTIST NAME IDEAS -->
-  <div class="tool-panel" id="panel-names">
-    <div class="panel-tag">// Tool 08</div>
-    <div class="panel-title">Artist Name Ideas</div>
-    <p class="panel-desc">Find a name that actually sounds like something. Unique, memorable, built for your sound.</p>
-    <div class="controls-grid" style="margin-bottom:16px;">
-      <div class="control-group">
-        <label class="control-label">Genre</label>
-        <select id="names-genre">
-          <option>Darkwave</option><option>Dark R&B</option><option>Pop</option>
-          <option>R&B</option><option>Hip-Hop</option><option>Rock</option>
-          <option>Electronic</option><option>Indie</option><option>Metal</option>
-          <option>Ambient</option><option>Folk</option>
-        </select>
+    <div style="margin-bottom:32px">
+      <div class="panel-tag" style="margin-bottom:12px">// Name Generator</div>
+      <div class="controls-grid" style="margin-bottom:16px">
+        <div class="control-group">
+          <label class="control-label">Genre</label>
+          <select id="names-genre">
+            <option>Darkwave</option><option>Dark R&B</option><option>Pop</option>
+            <option>R&B</option><option>Hip-Hop</option><option>Rock</option>
+            <option>Electronic</option><option>Indie</option><option>Metal</option>
+            <option>Ambient</option><option>Folk</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Vibe</label>
+          <select id="names-vibe">
+            <option>Dark & Mysterious</option><option>Cool & Minimal</option>
+            <option>Bold & Powerful</option><option>Soft & Emotional</option>
+            <option>Futuristic</option><option>Raw & Gritty</option><option>Poetic & Abstract</option>
+          </select>
+        </div>
       </div>
-      <div class="control-group">
-        <label class="control-label">Vibe</label>
-        <select id="names-vibe">
-          <option>Dark & Mysterious</option><option>Cool & Minimal</option>
-          <option>Bold & Powerful</option><option>Soft & Emotional</option>
-          <option>Futuristic</option><option>Raw & Gritty</option>
-          <option>Poetic & Abstract</option>
-        </select>
+      <div class="control-group" style="margin-bottom:8px">
+        <label class="control-label">Describe yourself or your sound (optional)</label>
+        <div class="input-with-dice">
+          <textarea id="names-desc" placeholder="e.g. solo artist, dark and introspective, electronic beats with raw vocals..."></textarea>
+          <button class="dice-btn" onclick="rollDice('names-desc','names')" title="Random idea">&#x1F3B2;</button>
+        </div>
+        <div class="dice-pool" id="names-pool"></div>
+      </div>
+      <div class="btn-row">
+        <button class="generate-btn" id="names-btn" onclick="generateNames()">Generate Names</button>
+        <div class="loading-dots" id="names-loading"><span></span><span></span><span></span></div>
+      </div>
+      <div class="output-box" id="names-output">
+        <div class="output-label"><span>Name Ideas</span><button class="copy-btn" onclick="copyOutput('names-text')">Copy</button></div>
+        <div class="output-content" id="names-text"></div>
       </div>
     </div>
-    <div class="control-group" style="margin-bottom:8px;">
-      <label class="control-label">Describe yourself or your sound (optional)</label>
-      <div class="input-with-dice">
-        <textarea id="names-desc" placeholder="e.g. solo artist, dark and introspective, electronic beats with raw vocals..."></textarea>
-        <button class="dice-btn" onclick="rollDice('names-desc','names')" title="Random idea">🎲</button>
-      </div>
-      <div class="dice-pool" id="names-pool"></div>
-    </div>
-    <div class="btn-row">
-      <button class="generate-btn" id="names-btn" onclick="generateNames()">✨ Generate Names</button>
-      <div class="loading-dots" id="names-loading"><span></span><span></span><span></span></div>
-    </div>
-    <div class="output-box" id="names-output">
-      <div class="output-label"><span>Name Ideas</span><button class="copy-btn" onclick="copyOutput('names-text')">Copy</button></div>
-      <div class="output-content" id="names-text"></div>
-    </div>
-  </div>
 
-  <!-- ARTIST BIO --><!-- ARTIST BIO -->
-  <div class="tool-panel" id="panel-bio">
-    <div class="panel-tag">// Tool 09</div>
-    <div class="panel-title">Artist Bio</div>
-    <p class="panel-desc">Professional bio for press kits, Spotify and social — sounds like a human wrote it.</p>
-    <div class="controls-grid" style="margin-bottom:16px;">
-      <div class="control-group">
-        <label class="control-label">Artist / Band Name</label>
-        <input type="text" id="bio-name" placeholder="e.g. Faern">
+    <div style="border-top:1px solid #222;padding-top:40px">
+      <div class="panel-tag" style="margin-bottom:12px">// Bio Generator</div>
+      <div class="controls-grid" style="margin-bottom:16px">
+        <div class="control-group">
+          <label class="control-label">Artist / Band Name</label>
+          <input type="text" id="bio-name" placeholder="e.g. Faern">
+        </div>
+        <div class="control-group">
+          <label class="control-label">Genre</label>
+          <input type="text" id="bio-genre" placeholder="e.g. Darkwave Ambient">
+        </div>
       </div>
-      <div class="control-group">
-        <label class="control-label">Genre</label>
-        <input type="text" id="bio-genre" placeholder="e.g. Darkwave Ambient">
+      <div class="control-group" style="margin-bottom:8px">
+        <label class="control-label">Tell us about yourself</label>
+        <div class="input-with-dice">
+          <textarea id="bio-info" placeholder="e.g. Solo artist from Malaysia, started in 2022, influenced by The Cure..."></textarea>
+          <button class="dice-btn" onclick="rollDice('bio-info','bio')" title="Inspiration">&#x1F3B2;</button>
+        </div>
+        <div class="dice-pool" id="bio-pool"></div>
       </div>
-    </div>
-    <div class="control-group" style="margin-bottom:8px;">
-      <label class="control-label">Tell us about yourself</label>
-      <div class="input-with-dice">
-        <textarea id="bio-info" placeholder="e.g. Solo artist from Malaysia, started in 2022, influenced by The Cure..."></textarea>
-        <button class="dice-btn" onclick="rollDice('bio-info','bio')" title="Inspiration">🎲</button>
+      <div class="controls-grid" style="margin-bottom:20px">
+        <div class="control-group">
+          <label class="control-label">Tone</label>
+          <select id="bio-tone">
+            <option>Professional & Press</option><option>Mysterious & Artistic</option>
+            <option>Casual & Relatable</option><option>Bold & Confident</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Length</label>
+          <select id="bio-length">
+            <option>Short (100 words)</option><option>Medium (200 words)</option><option>Long (400 words)</option>
+          </select>
+        </div>
       </div>
-      <div class="dice-pool" id="bio-pool"></div>
-    </div>
-    <div class="controls-grid" style="margin-bottom:20px;">
-      <div class="control-group">
-        <label class="control-label">Tone</label>
-        <select id="bio-tone">
-          <option>Professional & Press</option><option>Mysterious & Artistic</option>
-          <option>Casual & Relatable</option><option>Bold & Confident</option>
-        </select>
+      <div class="btn-row">
+        <button class="generate-btn" id="bio-btn" onclick="generateBio()">Generate Bio</button>
+        <div class="loading-dots" id="bio-loading"><span></span><span></span><span></span></div>
       </div>
-      <div class="control-group">
-        <label class="control-label">Length</label>
-        <select id="bio-length">
-          <option>Short (100 words)</option><option>Medium (200 words)</option><option>Long (400 words)</option>
-        </select>
+      <div class="output-box" id="bio-output">
+        <div class="output-label"><span>Your Artist Bio</span><button class="copy-btn" onclick="copyOutput('bio-text')">Copy</button></div>
+        <div class="output-content" id="bio-text"></div>
       </div>
-    </div>
-    <div class="btn-row">
-      <button class="generate-btn" id="bio-btn" onclick="generateBio()">🎨 Generate Bio</button>
-      <div class="loading-dots" id="bio-loading"><span></span><span></span><span></span></div>
-    </div>
-    <div class="output-box" id="bio-output">
-      <div class="output-label"><span>Your Artist Bio</span><button class="copy-btn" onclick="copyOutput('bio-text')">Copy</button></div>
-      <div class="output-content" id="bio-text"></div>
     </div>
   </div>
 </section>
@@ -904,6 +898,7 @@ function setLoading(id,on){
 }
 
 // ── CHORD GENERATOR ──────────────────────────────
+let lastChordNotes=[];
 async function generateChords(){
   setLoading('chord',true);
   const key=document.getElementById('chord-key').value;
@@ -1139,11 +1134,265 @@ NAME — [why it works]`);
   setLoading('names',false);
 }
 
+
+// ── SCALE EXPLORER ───────────────────────────────
+const SCALES = {
+  'Minor':[0,2,3,5,7,8,10],'Major':[0,2,4,5,7,9,11],
+  'Dorian':[0,2,3,5,7,9,10],'Phrygian':[0,1,3,5,7,8,10],
+  'Lydian':[0,2,4,6,7,9,11],'Mixolydian':[0,2,4,5,7,9,10],
+  'Pentatonic Minor':[0,3,5,7,10],'Pentatonic Major':[0,2,4,7,9],
+  'Blues':[0,3,5,6,7,10]
+};
+const ALL_NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const BLACK_KEYS=['C#','D#','F#','G#','A#'];
+
+function exploreScale(){
+  const root=document.getElementById('scale-root').value;
+  const type=document.getElementById('scale-type').value;
+  const rootIdx=ALL_NOTES.indexOf(root);
+  const intervals=SCALES[type]||SCALES['Minor'];
+  const notes=intervals.map(i=>ALL_NOTES[(rootIdx+i)%12]);
+  renderScalePiano('scale-piano',notes);
+  const chordHints={
+    'Minor':`Common chords: ${root}m, ${ALL_NOTES[(rootIdx+3)%12]}, ${ALL_NOTES[(rootIdx+5)%12]}, ${ALL_NOTES[(rootIdx+7)%12]}m`,
+    'Major':`Common chords: ${root}, ${ALL_NOTES[(rootIdx+2)%12]}m, ${ALL_NOTES[(rootIdx+5)%12]}, ${ALL_NOTES[(rootIdx+7)%12]}`,
+    'Dorian':`Common chords: ${root}m, ${ALL_NOTES[(rootIdx+2)%12]}m, ${ALL_NOTES[(rootIdx+5)%12]}, ${ALL_NOTES[(rootIdx+7)%12]}`,
+    'Blues':`Blues scale — works over dominant 7th chords. Try: ${root}7, ${ALL_NOTES[(rootIdx+5)%12]}7, ${ALL_NOTES[(rootIdx+7)%12]}7`,
+    'Pentatonic Minor':`Works over: ${root}m, ${ALL_NOTES[(rootIdx+3)%12]}, ${ALL_NOTES[(rootIdx+7)%12]}m`,
+    'Pentatonic Major':`Works over: ${root}, ${ALL_NOTES[(rootIdx+5)%12]}, ${ALL_NOTES[(rootIdx+7)%12]}`,
+  };
+  document.getElementById('scale-info').innerHTML=
+    `<strong style="color:var(--text)">${root} ${type}</strong><br>
+     <span style="color:var(--muted2);font-family:var(--mono);font-size:13px">Notes: ${notes.join(' — ')}</span><br><br>
+     <span style="color:var(--muted);font-family:var(--mono);font-size:12px">${chordHints[type]||''}</span>`;
+}
+
+function renderScalePiano(containerId, highlightNotes){
+  const container=document.getElementById(containerId);
+  if(!container) return;
+  container.innerHTML='';
+  const wrap=document.createElement('div');
+  wrap.style.cssText='display:flex;gap:2px;justify-content:center;flex-wrap:wrap;';
+  ALL_NOTES.forEach(note=>{
+    const isBlack=BLACK_KEYS.includes(note);
+    const isHighlighted=highlightNotes.includes(note);
+    const key=document.createElement('div');
+    key.style.cssText=`
+      width:${isBlack?'28px':'38px'};height:${isBlack?'70px':'110px'};
+      background:${isHighlighted?(isBlack?'var(--accent)':'var(--accent)'):(isBlack?'#111':'#e8e8e8')};
+      border:1px solid ${isBlack?'#000':'#ccc'};border-radius:0 0 4px 4px;
+      display:flex;align-items:flex-end;justify-content:center;
+      padding-bottom:6px;cursor:pointer;transition:opacity 0.15s;
+      font-family:var(--mono);font-size:9px;
+      color:${isHighlighted?'#fff':(isBlack?'#888':'#333')};
+      font-weight:${isHighlighted?'bold':'normal'};
+    `;
+    key.title=note;
+    key.textContent=isHighlighted?note:'';
+    key.onclick=()=>playNote(note+'4');
+    wrap.appendChild(key);
+  });
+  container.appendChild(wrap);
+}
+
+async function playScale(){
+  await ensureTone();
+  const root=document.getElementById('scale-root').value;
+  const type=document.getElementById('scale-type').value;
+  const rootIdx=ALL_NOTES.indexOf(root);
+  const intervals=SCALES[type]||SCALES['Minor'];
+  const notes=intervals.map(i=>ALL_NOTES[(rootIdx+i)%12]+'4');
+  notes.push(root+'5');
+  const synth=new Tone.Synth({volume:-8,envelope:{attack:0.02,decay:0.3,sustain:0.4,release:1}}).toDestination();
+  let t=Tone.now();
+  notes.forEach(n=>{synth.triggerAttackRelease(n,'8n',t);t+=0.22;});
+}
+
+async function playNote(note){
+  await ensureTone();
+  const synth=new Tone.Synth({volume:-10}).toDestination();
+  synth.triggerAttackRelease(note,'8n');
+}
+
+// ── BPM TAPPER ───────────────────────────────────
+let tapTimes=[];
+function tapBPM(){
+  const now=Date.now();
+  tapTimes.push(now);
+  if(tapTimes.length>8) tapTimes.shift();
+  const display=document.getElementById('bpm-display');
+  const hint=document.getElementById('bpm-hint');
+  display.style.transform='scale(1.05)';
+  setTimeout(()=>display.style.transform='scale(1)',100);
+  if(tapTimes.length<2){hint.textContent='Keep tapping...';return;}
+  const intervals=[];
+  for(let i=1;i<tapTimes.length;i++) intervals.push(tapTimes[i]-tapTimes[i-1]);
+  const avg=intervals.reduce((a,b)=>a+b,0)/intervals.length;
+  const bpm=Math.round(60000/avg);
+  display.textContent=bpm;
+  hint.textContent=bpm<60?'Very slow / Ballad':bpm<90?'Slow / Chill':bpm<110?'Medium / Groove':bpm<130?'Upbeat / Pop':bpm<150?'Fast / Dance':'Very fast / Energetic';
+}
+function resetBPM(){
+  tapTimes=[];
+  document.getElementById('bpm-display').textContent='--';
+  document.getElementById('bpm-hint').textContent='Tap at least 4 times for accuracy';
+}
+
+// ── KEY FINDER ───────────────────────────────────
+async function findKey(){
+  const chords=document.getElementById('keyfinder-chords').value;
+  if(!chords){alert('Enter your chords first');return;}
+  setLoading('keyfinder',true);
+  try{
+    const r=await callClaude(`Music theory expert. The musician has these chords: "${chords}"
+
+Tell them:
+1. The most likely key (or 2 if genuinely ambiguous)
+2. Major or minor
+3. The relative major/minor key
+4. 3 other chords that would naturally fit
+
+Be direct. No long explanations. Use plain language.`);
+    document.getElementById('keyfinder-text').textContent=r;
+    document.getElementById('keyfinder-output').classList.add('show');
+  }catch(e){alert('Error. Try again.');}
+  setLoading('keyfinder',false);
+}
+
+// ── MELODY GENERATOR ─────────────────────────────
+let lastMelodyNotes=[];
+async function generateMelody(){
+  const chords=document.getElementById('melody-chords').value;
+  if(!chords){alert('Enter your chords!');return;}
+  setLoading('melody',true);
+  const key=document.getElementById('melody-key').value;
+  const scale=document.getElementById('melody-scale').value;
+  const style=document.getElementById('melody-style').value;
+  try{
+    const r=await callClaude(`You are a melody composer. Create a singable melody for:
+Chords: ${chords}
+Key: ${key} ${scale} | Style: ${style}
+
+Return this EXACT format — nothing else:
+
+BAR 1: [note names like C4 E4 G4] — [rhythm: quarter quarter half etc]
+BAR 2: [note names] — [rhythm]
+BAR 3: [note names] — [rhythm]
+BAR 4: [note names] — [rhythm]
+
+MELODY NOTES: C4, E4, G4, A4, G4, F4, E4, C4
+
+Keep it simple and singable. Stick to the key. Max 8 bars.`);
+    document.getElementById('melody-text').textContent=r;
+    document.getElementById('melody-output').classList.add('show');
+    const m=r.match(/MELODY NOTES:\s*([^
+]+)/i);
+    if(m){
+      lastMelodyNotes=m[1].split(',').map(n=>n.trim()).filter(Boolean);
+      document.getElementById('melody-midi-btn').style.display='inline-flex';
+    }
+  }catch(e){alert('Error. Try again.');}
+  setLoading('melody',false);
+}
+
+// ── MIDI BUILDER ─────────────────────────────────
+const MIDI_NOTE_MAP={'C':0,'C#':1,'Db':1,'D':2,'D#':3,'Eb':3,'E':4,'F':5,'F#':6,'Gb':6,'G':7,'G#':8,'Ab':8,'A':9,'A#':10,'Bb':10,'B':11};
+
+function parseMIDINote(n){
+  const m=n.match(/^([A-G]#?b?)(\d)$/);
+  if(!m) return 60;
+  return (parseInt(m[2])+1)*12+(MIDI_NOTE_MAP[m[1]]||0);
+}
+
+function varLen(v){
+  const b=[];b.push(v&0x7F);v>>=7;
+  while(v){b.unshift((v&0x7F)|0x80);v>>=7;}
+  return b;
+}
+
+function buildMIDI(noteEvents, bpm=120){
+  const tempo=Math.round(60000000/bpm);
+  const ev=[];
+  // tempo
+  ev.push(0x00,0xFF,0x51,0x03,(tempo>>16)&0xFF,(tempo>>8)&0xFF,tempo&0xFF);
+  // notes
+  noteEvents.forEach(({note,duration})=>{
+    const mn=parseMIDINote(note);
+    ev.push(...varLen(0),0x90,mn,80);
+    ev.push(...varLen(duration),0x80,mn,0);
+  });
+  ev.push(0x00,0xFF,0x2F,0x00);
+  const buf=new Uint8Array([
+    0x4D,0x54,0x68,0x64,0,0,0,6,0,0,0,1,0x01,0xE0,
+    0x4D,0x54,0x72,0x6B,
+    (ev.length>>24)&0xFF,(ev.length>>16)&0xFF,(ev.length>>8)&0xFF,ev.length&0xFF,
+    ...ev
+  ]);
+  return buf;
+}
+
+function triggerMIDIDownload(buffer, filename){
+  const blob=new Blob([buffer],{type:'audio/midi'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=filename;a.click();
+}
+
+function downloadMelodyMIDI(){
+  if(!lastMelodyNotes.length) return;
+  const events=lastMelodyNotes.map(n=>({note:n,duration:480}));
+  triggerMIDIDownload(buildMIDI(events,90),'sonarc-melody.mid');
+}
+
+function downloadChordMIDI(){
+  if(!lastChordNotes||!lastChordNotes.length) return;
+  const events=[];
+  lastChordNotes.forEach(chord=>{
+    chord.forEach((n,i)=>{
+      if(i===0) events.push({note:n,duration:960});
+      else events.push({note:n,duration:0});
+    });
+  });
+  triggerMIDIDownload(buildMIDI(events,90),'sonarc-chords.mid');
+}
+
+function downloadDrumMIDI(){
+  const DRUM_MAP={kick:36,snare:38,hihat:42,openhat:46,clap:39,tom:45,cymbal:49,rimshot:37};
+  const grid=document.querySelectorAll('.drum-track');
+  if(!grid.length) return;
+  const ev=[];
+  const tempo=Math.round(60000000/(currentBPM||120));
+  ev.push(0x00,0xFF,0x51,0x03,(tempo>>16)&0xFF,(tempo>>8)&0xFF,tempo&0xFF);
+  const stepLen=120;
+  grid.forEach(track=>{
+    const inst=track.dataset.inst;
+    const mn=DRUM_MAP[inst]||38;
+    const steps=track.querySelectorAll('.drum-step');
+    let tick=0;
+    steps.forEach((s,i)=>{
+      if(s.classList.contains('active')){
+        ev.push(...varLen(tick),0x99,mn,100);
+        ev.push(...varLen(stepLen),0x89,mn,0);
+        tick=0;
+      } else { tick+=stepLen; }
+    });
+  });
+  ev.push(0x00,0xFF,0x2F,0x00);
+  const buf=new Uint8Array([
+    0x4D,0x54,0x68,0x64,0,0,0,6,0,0,0,1,0x01,0xE0,
+    0x4D,0x54,0x72,0x6B,
+    (ev.length>>24)&0xFF,(ev.length>>16)&0xFF,(ev.length>>8)&0xFF,ev.length&0xFF,
+    ...ev
+  ]);
+  triggerMIDIDownload(buf,'sonarc-drums.mid');
+}
+
 // ── COPY ─────────────────────────────────────────
 function copyOutput(id){
   navigator.clipboard.writeText(document.getElementById(id).textContent);
   event.target.textContent='Copied!';
   setTimeout(()=>event.target.textContent='Copy',2000);
 }
+
 </script>
 </body></html>
