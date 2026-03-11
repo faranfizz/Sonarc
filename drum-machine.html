@@ -927,8 +927,7 @@ MELODY NOTES: C4, E4, G4, A4, G4, F4, E4, C4
 Keep it simple and singable. Stick to the key. Max 8 bars.`);
     document.getElementById('melody-text').textContent=r;
     document.getElementById('melody-output').classList.add('show');
-    const m=r.match(/MELODY NOTES:\s*([^
-]+)/i);
+    const mIdx=r.indexOf("MELODY NOTES:");const m=mIdx>=0?[1,r.slice(mIdx+13).split(String.fromCharCode(10))[0].trim()]:null;
     if(m){
       lastMelodyNotes=m[1].split(',').map(n=>n.trim()).filter(Boolean);
       document.getElementById('melody-midi-btn').style.display='inline-flex';
