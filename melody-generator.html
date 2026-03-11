@@ -184,7 +184,7 @@ nav a{text-decoration:none;}
 </style></head>
 <body>
 <canvas id="waveCanvas"></canvas>
-<nav><div class="logo">Son<span>arc</span></div><ul class="nav-links"><li><a href="/">Home</a></li><li><a href="/chord-generator">Chord Generator</a></li><li><a href="/drum-machine">Drum Machine</a></li><li><a href="/lyrics-generator">Lyrics AI</a></li><li><a href="/hook-generator">Hook Generator</a></li><li><a href="/genre-blender">Genre Blender</a></li><li><a href="/song-titles">Song Titles</a></li><li><a href="/artist-name-ideas">Artist Names</a></li><li><a href="/artist-bio-generator">Artist Bio</a></li></ul></nav>
+<nav><div class="logo">Son<span>arc</span></div><ul class="nav-links"><li><a href="/">Home</a></li><li><a href="/chord-generator">Chord Generator</a></li><li><a href="/drum-machine">Drum Machine</a></li><li><a href="/lyrics-generator">Lyrics AI</a></li><li><a href="/scale-explorer">Scale Explorer</a></li><li><a href="/bpm-tapper">BPM Tapper</a></li><li><a href="/key-finder">Key Finder</a></li><li><a href="/melody-generator" style="color:var(--text)">Melody Generator</a></li><li><a href="/artist-profile">Artist Profile</a></li></ul></nav>
 <section class="hero" style="min-height:55vh;padding-top:140px;padding-bottom:40px;">
   <div class="hero-label">Sonarc — AI Music Tools</div>
   <h1 style="font-size:clamp(52px,8vw,110px);letter-spacing:5px">MELODY <span class="outline">GENERATOR</span></h1>
@@ -250,8 +250,8 @@ nav a{text-decoration:none;}
     <a href="/chord-generator">Chord Generator</a>
     <a href="/lyrics-generator">Lyrics AI</a>
     <a href="/drum-machine">Drum Machine</a>
-    <a href="/hook-generator">Hook Generator</a>
-    <a href="/artist-bio-generator">Artist Bio</a>
+    <a href="/scale-explorer">Scale Explorer</a>
+    <a href="/artist-profile">Artist Profile</a>
     <a href="/privacy">Privacy</a>
     <a href="/contact">Contact</a>
   </div>
@@ -281,6 +281,7 @@ function switchTab(tab,el){
   document.querySelectorAll('.tool-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.tool-panel').forEach(p=>p.classList.remove('active'));
   el.classList.add('active'); document.getElementById('panel-'+tab).classList.add('active');
+  if(tab==='drums') setTimeout(renderGrid, 50);
 }
 
 // ── INSTRUMENT ───────────────────────────────────
@@ -300,8 +301,8 @@ function makeSynth(inst){
   const opts = {
     piano:   { type:'triangle', attack:0.02, decay:0.4, sustain:0.3, release:1.4, vol:-4 },
     guitar:  { type:'sawtooth', attack:0.005,decay:0.25,sustain:0.2, release:0.9, vol:-7 },
-    strings: { type:'sine',     attack:0.35, decay:0.6, sustain:0.75,release:2.2, vol:-5 },
-    pad:     { type:'sine',     attack:0.6,  decay:0.8, sustain:0.9, release:3.0, vol:-6 },
+    strings: { type:'sawtooth', attack:0.4,  decay:0.5, sustain:0.8, release:2.5, vol:-8 },
+    pad:     { type:'triangle', attack:0.8,  decay:1.0, sustain:0.9, release:4.0, vol:-10 },
   }[inst] || opts.piano;
 
   const reverb = new Tone.Reverb({ decay: inst==='strings'?4:2, wet:0.3 }).toDestination();
