@@ -637,24 +637,23 @@ async function generateLyrics(){
   const genre=document.getElementById('lyrics-genre').value;
   const lang=document.getElementById('lyrics-lang').value;
   try{
-    const r=await callClaude(`You write lyrics for real musicians, not for demos.
+    const r=await callClaude(`You are a songwriter. Write brutal, honest, specific lyrics. Not pretty. Not poetic. Real.
 
-LANGUAGE REQUIREMENT: Write EVERY word in ${lang}. Zero English words if ${lang} is not English. This is non-negotiable.
+LANGUAGE: Write EVERY word in ${lang}. No English unless ${lang} is English.
+GENRE: ${genre}
+TOPIC: "${theme}"
 
-Write a short song in ${lang} for a ${genre} track about: "${theme}"
+RULES:
+— Specific over vague. Not "I'm hurting" — say what actually happened
+— Short lines. Max 7 syllables. Cut every word that doesn't pull weight
+— No rhyme schemes. Only rhyme if it sounds natural when sung
+— No metaphors unless they're dead simple
+— No: soul, heart, tears, broken, forever, fire, rise, light, shadow, echo, void, hollow, darkness, pain, scream, breathe — these are banned
+— Contractions only: I'm not I am, don't not do not
+— Write like a real person said it, not a songwriter trying to sound deep
+— Each section = one specific moment or feeling, not a summary
 
-RULES — every single one matters:
-— Write like you're texting someone at 2am, not writing a school poem
-— Contractions always: I'm / don't / you're / can't / won't
-— BANNED words: linger, serenade, echo, eternal, soul, surrender, shatter, embrace, illuminate, melancholy, solace, yearning, whisper, hollow, void, wither, silhouette, symphony, cascade — or anything that sounds like a dictionary
-— Max 6 syllables per line — short, punchy, singable
-— Exactly 4 lines per section — no more, no less
-— End sounds should flow when sung — think phonetics not just rhyme
-— Imperfect rhymes are fine, forced rhymes are not
-— One feeling per section, don't mix emotions
-— Less is more — don't over-explain the feeling
-
-Output format only:
+Output only this, no labels explanation:
 [Verse]
 
 [Chorus]
