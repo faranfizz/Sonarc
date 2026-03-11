@@ -452,14 +452,14 @@ async function hitDrum(type){
   }
 }
 
-function updateBPMDisplay(){ document.getElementById('bpm-display').textContent=document.getElementById('drum-bpm').value||120; }
+function updateBPMDisplay(){ document.getElementById('drum-bpm-display').textContent=document.getElementById('drum-bpm').value||120; }
 
 function togglePlay(){
   playing=!playing;
   document.getElementById('play-btn').textContent=playing?'⏹':'▶';
   if(playing){
     const bpm=parseInt(document.getElementById('drum-bpm').value)||120;
-    document.getElementById('bpm-display').textContent=bpm;
+    document.getElementById('drum-bpm-display').textContent=bpm;
     const iv=(60/bpm/4)*1000;
     drumTimer=setInterval(()=>{
       document.querySelectorAll('.drum-step.playing').forEach(s=>s.classList.remove('playing'));
